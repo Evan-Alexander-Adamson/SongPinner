@@ -107,6 +107,111 @@
         height: calc(100% - 150px);
         min-height: 300px;
       }
+
+      @keyframes revealFromLeft {
+        0% {
+          transform: scaleX(0);
+        }
+        100% {
+          transform: scaleX(1);
+        }
+      }
+
+      @keyframes gradientReveal {
+        0% {
+          -webkit-mask-image: linear-gradient(to right, #000 0%, transparent 0%);
+          mask-image: linear-gradient(to right, #000 0%, transparent 0%);
+        }
+        100% {
+          -webkit-mask-image: linear-gradient(to right, #000 100%, transparent 100%);
+          mask-image: linear-gradient(to right, #000 100%, transparent 100%);
+        }
+      }
+
+      .suggestion-text {
+        background: #f5f5f5;
+        padding: 12px;
+        border-radius: 5px;
+        margin-top: 10px;
+      }
+
+      .suggestion-content {
+        color: #333;
+        font-size: 1.1em;
+        line-height: 1.4;
+        opacity: 0;
+        transition: opacity 0.3s ease-out;
+      }
+
+      .suggestion-content.show {
+        opacity: 1;
+      }
+
+      .text-segment {
+        display: inline-block;
+        opacity: 0;
+        transition: all 0.4s ease-out;
+      }
+
+      .text-segment.show {
+        opacity: 1;
+      }
+
+      .colored-word {
+        display: inline-block;
+        opacity: 0;
+        transition: all 0.4s ease-out;
+      }
+
+      .colored-word.show {
+        opacity: 1;
+      }
+
+      .reveal-text {
+        display: inline;
+        -webkit-mask-image: linear-gradient(to right, #000 0%, transparent 0%);
+        mask-image: linear-gradient(to right, #000 0%, transparent 0%);
+        animation: gradientReveal 1.2s ease-out forwards;
+      }
+
+      .thinking {
+        display: inline-block;
+        font-size: 1.2em;
+        color: #666;
+      }
+
+      .thinking::after {
+        content: "...";
+        display: inline-block;
+        animation: thinkingDots 1.5s infinite;
+      }
+
+      .delay-1 { animation-delay: 0.3s; }
+      .delay-2 { animation-delay: 0.6s; }
+      .delay-3 { animation-delay: 0.9s; }
+
+      @keyframes thinkingDots {
+        0%, 20% {
+          content: ".";
+        }
+        40% {
+          content: "..";
+        }
+        60%, 100% {
+          content: "...";
+        }
+      }
+
+      .suggestion-container {
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s ease-out;
+      }
+
+      .suggestion-container.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
     </style>
   </head>
   <body class="bg-light">
@@ -369,6 +474,15 @@
       // Creative Suggestions Generator
       // ---------------------------
       d3.select("#generateSuggestions").on("click", function() {
+        const outputDiv = d3.select("#suggestionsOutput");
+        
+        // Show thinking animation
+        outputDiv.html(`
+          <div class="suggestion-text">
+            <div class="thinking">Thinking</div>
+          </div>
+        `);
+
         const selectedCategory = d3.select("#predictionCategorySelect").property("value");
         const selectedMainCategory = d3.select("#categorySelect").property("value");
         const selectedTrendType = d3.select("#trendTypeSelect").property("value");
@@ -384,25 +498,52 @@
             Math.floor(Math.random() * selectedSection.items.length)
           ];
 
+          const matchingTrends = ytTrends.filter(trend => 
+            trend.toLowerCase().includes(selectedMainCategory.toLowerCase())
+          );
+          const selectedTrend = matchingTrends.length > 0 
+            ? matchingTrends[Math.floor(Math.random() * matchingTrends.length)]
+            : randomYTTrend;
+
           const suggestion = `
-            <div style="background: #f5f5f5; padding: 12px; border-radius: 5px; margin-top: 10px;">
-              <div style="color: #333; font-size: 1.1em; line-height: 1.4;">
-                Try making a song about <span style="color: #2196F3;">${aestheticItem}</span> 
-                for a youtube video on <span style="color: #4CAF50;">${
-                  (() => {
-                    const matchingTrends = ytTrends.filter(trend => 
-                      trend.toLowerCase().includes(selectedMainCategory.toLowerCase())
-                    );
-                    return matchingTrends.length > 0 
-                      ? matchingTrends[Math.floor(Math.random() * matchingTrends.length)]
-                      : randomYTTrend;
-                  })()
-                }</span> 
-                with a <span style="color: #9C27B0;">${selectedCategory}</span> vibe
+            <div class="suggestion-text">
+              <div class="suggestion-content">
+                <div class="content-wrapper">
+                  <span class="text-segment">Try making a song about </span>
+                  <span class="colored-word" style="color: #2196F3">${aestheticItem}</span>
+                  <span class="text-segment">for a youtube video on </span>
+                  <span class="colored-word" style="color: #4CAF50">${selectedTrend}</span>
+                  <span class="text-segment">with a </span>
+                  <span class="colored-word" style="color: #9C27B0">${selectedCategory}</span>
+                  <span class="text-segment">vibe</span>
+                </div>
               </div>
             </div>
           `;
-          d3.select("#suggestionsOutput").html(`<p>${suggestion}</p>`);
+
+          // Wait for thinking animation
+          setTimeout(() => {
+            outputDiv.html(`<p>${suggestion}</p>`);
+            
+            // Ensure content is fully rendered before starting animations
+            const startAnimationSequence = () => {
+              const content = outputDiv.select('.suggestion-content');
+              content.classed('show', true);
+
+              // Get all text segments in order
+              const allSegments = outputDiv.selectAll('.text-segment, .colored-word').nodes();
+              
+              // Reveal all segments in sequence
+              allSegments.forEach((segment, index) => {
+                setTimeout(() => {
+                  d3.select(segment).classed('show', true);
+                }, 200 + (index * 200)); // Faster, smoother timing
+              });
+            };
+
+            // Add a delay to ensure DOM is ready and content is rendered
+            setTimeout(startAnimationSequence, 100);
+          }, 1500);
         });
       });
     </script>
