@@ -18,35 +18,38 @@
       }
 
       .container-fluid {
-        min-height: 100%;
         padding: 1rem;
       }
 
-      .row {
-        min-height: 100%;
-      }
-
       @media (max-width: 768px) {
+        html, body {
+          height: auto;
+        }
+        
         .container-fluid {
           height: auto;
-          overflow-y: visible;
+          padding: 1rem;
         }
         
         .row {
-          height: auto;
+          display: flex;
+          flex-direction: column;
+        }
+        
+        .col-md-6 {
+          width: 100%;
+          margin-bottom: 1rem;
         }
         
         .panel {
           height: auto;
-          margin-bottom: 1rem;
-        }
-        
-        .col-md-6 {
+          min-height: auto;
           margin-bottom: 1rem;
         }
         
         svg {
-          height: 400px;
+          height: 300px;
+          min-height: 300px;
         }
       }
 
@@ -55,8 +58,7 @@
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         padding: 1.5rem;
-        height: 100%;
-        overflow-y: auto;
+        margin-bottom: 1rem;
       }
       
       h2 {
@@ -109,7 +111,7 @@
   </head>
   <body class="bg-light">
     <div class="container-fluid">
-      <div class="row h-100">
+      <div class="row">
         <div class="col-md-6">
           <div class="panel">
             <h2>Pinterest Trends Visualization</h2>
