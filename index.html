@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moon Raccoon Creative Assistant</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Load D3 from CDN -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+      html, body, .container-fluid {
+        height: 100vh;
+      }
+
+      /* Basic styling for the chart and axes */
+      .axis path,
+      .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+      }
+      .line {
+        fill: none;
+        stroke: steelblue;
+        stroke-width: 2px;
+      }
+      .container-fluid {
+        padding: 1rem;
+      }
+
+      .row {
+        height: 100%;
+      }
+
+      .panel {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 1.5rem;
+        height: 100%;
+        overflow-y: auto;
+      }
+      
+      h2 {
+        margin-bottom: 8px;
+        font-size: 1.2em;
+      }
+
+      select, button {
+        margin-bottom: 8px;
+      }
+
+      /* Full width for the chart SVG */
+      svg {
+        width: 100%;
+        height: calc(100% - 120px); /* Adjust for header and controls */
+      }
+
+      .prediction-section {
+        margin-bottom: 12px;
+      }
+
+      .prediction-section h3 {
+        font-size: 1.1em;
+        margin-bottom: 6px;
+      }
+
+      .form-group {
+        margin-bottom: 1rem;
+      }
+
+      #generateSuggestions {
+        width: 100%;
+        margin: 1rem 0;
+      }
+
+      /* Full width for the chart SVG */
+      svg {
+        width: 100%;
+        height: calc(100% - 150px);
+        min-height: 300px;
+      }
+    </style>
+  </head>
+  <body class="bg-light">
+    <div class="container-fluid">
+      <div class="row h-100">
+        <div class="col-md-6">
+          <div class="panel">
+            <h2>Pinterest Trends Visualization</h2>
+            <!-- Main category dropdown -->
+            <div class="form-group">
+              <label for="categorySelect">Select a Category:</label>
+              <select id="categorySelect" class="form-select"></select>
+            </div>
+            <!-- Trend Type dropdown -->
+            <div class="form-group">
+              <label for="trendTypeSelect">Select Trend Type:</label>
+              <select id="trendTypeSelect" class="form-select">
+                <option value="top">Top Trends</option>
+                <option value="growing">Growing Trends</option>
+              </select>
+            </div>
+            <!-- Trend (sub-category) dropdown -->
+            <div class="form-group">
+              <label for="trendSelect">Select a Trend:</label>
+              <select id="trendSelect" class="form-select"></select>
+            </div>
+            <svg></svg>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <!-- Creative Suggestions Panel -->
+          <div class="panel">
+            <h2>Creative Suggestions for Moon Raccoon</h2>
+            <div class="form-group">
+              <label for="predictionCategorySelect">Choose Aesthetic Category:</label>
+              <select id="predictionCategorySelect" class="form-select"></select>
+            </div>
+            <p class="text-muted">Generate creative ideas for:</p>
+            <ul class="list-unstyled">
+              <li>Song names</li>
+              <li>Album art designs</li>
+              <li>Social media video reels</li>
+              <li>Motion graphic pieces for music videos</li>
+            </ul>
+            <button id="generateSuggestions" class="btn btn-primary">Generate Suggestions</button>
+            <div id="suggestionsOutput"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // ---------------------------
+      // Pinterest Trends Visualization
+      // ---------------------------
+      const margin = { top: 20, right: 50, bottom: 50, left: 50 };
+      const svgElement = d3.select("svg"),
+            svgWidth = +svgElement.attr("width") || 960,
+            svgHeight = +svgElement.attr("height") || 500,
+            width = svgWidth - margin.left - margin.right,
+            height = svgHeight - margin.top - margin.bottom;
+
+      const svg = svgElement
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+      const parseDate = d3.timeParse("%Y-%m-%d");
+
+      // Populate the main category dropdown.
+      const categorySelect = d3.select("#categorySelect");
+      const categories = ["music", "study", "art", "ethereal", "focus", "meditation"];
+      categorySelect.selectAll("option")
+        .data(categories)
+        .enter()
+        .append("option")
+        .attr("value", d => d)
+        .text(d => d.charAt(0).toUpperCase() + d.slice(1));
+
+      // Trend Type dropdown
+      const trendTypeSelect = d3.select("#trendTypeSelect");
+
+      // When the main category changes, load that category
+      categorySelect.on("change", function() {
+        loadCategory(this.value, trendTypeSelect.property("value"));
+        loadYTTrends(this.value);
+      });
+
+      trendTypeSelect.on("change", function() {
+        loadCategory(categorySelect.property("value"), this.value);
+      });
+
+      // Mapping for CSV file paths
+      const categoryFiles = {
+        "music": {
+          top: "data/Pinterest Trends report_2025-01-26 (1).csv",
+          growing: "data/Pinterest Trends report_2025-01-26.csv"
+        },
+        "study": {
+          top: "data/Pinterest Trends report_2025-01-26 (4).csv",
+          growing: "data/Pinterest Trends report_2025-01-26 (4).csv"
+        },
+        "art": {
+          top: "data/Pinterest Trends report_2025-01-26 (6).csv",
+          growing: "data/Pinterest Trends report_2025-01-26 (8).csv"
+        },
+        "ethereal": {
+          top: "data/Pinterest Trends report_2025-01-26 (7).csv",
+          growing: "data/Pinterest Trends report_2025-01-26 (9).csv"
+        },
+        "focus": {
+          top: "data/focus_trends_top.csv",
+          growing: "data/focus_trends_growing.csv"
+        },
+        "meditation": {
+          top: "data/meditation_trends_top.csv",
+          growing: "data/meditation_trends_growing.csv"
+        }
+      };
+
+      function loadCategory(category, trendType) {
+        const filePath = categoryFiles[category][trendType];
+        d3.text(filePath).then(function(raw) {
+          const lines = raw.split("\n");
+          let headerIndex = lines.findIndex(line => line.startsWith("Rank,"));
+          if (headerIndex === -1) {
+            console.error("CSV header not found in file:", filePath);
+            return;
+          }
+          const csvData = lines.slice(headerIndex).join("\n");
+          const currentData = d3.csvParse(csvData);
+          const allKeys = currentData.columns;
+          const dateKeys = allKeys.filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k));
+
+          const trendSelect = d3.select("#trendSelect");
+          trendSelect.selectAll("option").remove();
+          trendSelect.selectAll("option")
+            .data(currentData)
+            .enter()
+            .append("option")
+            .attr("value", d => d.Trend)
+            .text(d => (+d.Rank <= 5 ? "★ " : "") + d.Trend)
+            .style("font-weight", d => +d.Rank <= 5 ? "bold" : "normal")
+            .style("color", d => +d.Rank <= 5 ? "#d32f2f" : "inherit");
+
+          updateChart(currentData[0], dateKeys);
+
+          trendSelect.on("change", function() {
+            const selectedTrend = this.value;
+            const trendData = currentData.find(d => d.Trend === selectedTrend);
+            updateChart(trendData, dateKeys);
+          });
+        }).catch(error => {
+          console.error("Error loading or parsing data:", error);
+        });
+      }
+
+      function updateChart(trendData, dateKeys) {
+        const timeSeries = dateKeys.map(key => ({
+          date: parseDate(key),
+          value: +trendData[key]
+        }));
+        svg.selectAll("*").remove();
+        const xScale = d3.scaleTime()
+          .domain(d3.extent(timeSeries, d => d.date))
+          .range([0, width]);
+        const yScale = d3.scaleLinear()
+          .domain([0, d3.max(timeSeries, d => d.value)])
+          .range([height, 0]);
+        const line = d3.line()
+          .x(d => xScale(d.date))
+          .y(d => yScale(d.value));
+        svg.append("g")
+          .attr("transform", `translate(0,${height})`)
+          .call(d3.axisBottom(xScale));
+        svg.append("g")
+          .call(d3.axisLeft(yScale));
+        const isTopTrend = +trendData.Rank <= 5;
+        svg.append("path")
+          .datum(timeSeries)
+          .attr("class", "line")
+          .attr("d", line)
+          .attr("stroke", isTopTrend ? "orange" : "steelblue")
+          .attr("stroke-width", isTopTrend ? 4 : 2);
+      }
+
+      // Load initial category
+      loadCategory(categorySelect.node().value, trendTypeSelect.node().value);
+
+      // ---------------------------
+      // Background Functions (not visible but needed for generator)
+      // ---------------------------
+      function loadYTTrends(category) {
+        d3.text("youtube trends.txt").then(function(rawData) {
+          let trends = rawData.split(/\r?\n/).filter(line => line.trim() !== "");
+          if (category) {
+            const categoryKeywords = {
+              'music': ['ambient', 'lofi', 'beats', 'type beat', 'piano', 'instrumental'],
+              'study': ['study', 'focus', 'concentration', 'homework', 'learning'],
+              'art': ['art', 'drawing', 'painting', 'creative', 'design'],
+              'ethereal': ['ethereal', 'dreamy', 'ambient', 'atmospheric', 'peaceful'],
+              'focus': ['focus', 'concentration', 'productivity', 'work'],
+              'meditation': ['meditation', 'mindfulness', 'relaxation', 'zen']
+            };
+            const keywords = categoryKeywords[category] || [];
+            trends = trends.filter(trend => 
+              keywords.some(keyword => 
+                trend.toLowerCase().includes(keyword.toLowerCase())
+              )
+            );
+          }
+          window.filteredYTTrends = trends; // Store for generator to use
+        });
+      }
+
+      // Helper function to parse predictions markdown
+      function parsePredictions(markdown) {
+        const lines = markdown.split(/\r?\n/);
+        const sections = [];
+        let currentSection = null;
+        
+        lines.forEach(line => {
+          const trimmed = line.trim();
+          if (trimmed.startsWith("##")) {
+            const match = trimmed.match(/^##\s*(.+?)\s*(##)?$/);
+            if (match) {
+              currentSection = { header: match[1], items: [] };
+              sections.push(currentSection);
+            }
+          } else if (trimmed !== "" && currentSection) {
+            currentSection.items.push(trimmed);
+          }
+        });
+        return sections;
+      }
+
+      // Load and populate prediction categories
+      function loadPinterestPredictions() {
+        d3.text("data/pintrest_trend_predictions.md").then(function(rawData) {
+          const sections = parsePredictions(rawData);
+          const predictionSelect = d3.select("#predictionCategorySelect");
+          predictionSelect.selectAll("option")
+            .data(sections)
+            .enter()
+            .append("option")
+            .attr("value", d => d.header)
+            .text(d => d.header);
+        });
+      }
+
+      // Load predictions on startup
+      loadPinterestPredictions();
+      loadYTTrends(categorySelect.node().value);
+
+      // ---------------------------
+      // Creative Suggestions Generator
+      // ---------------------------
+      d3.select("#generateSuggestions").on("click", function() {
+        const selectedCategory = d3.select("#predictionCategorySelect").property("value");
+        const selectedMainCategory = d3.select("#categorySelect").property("value");
+        const selectedTrendType = d3.select("#trendTypeSelect").property("value");
+
+        Promise.all([
+          d3.text("youtube trends.txt"),
+          d3.text("data/pintrest_trend_predictions.md")
+        ]).then(([ytData, predictionsData]) => {
+          const ytTrends = ytData.split(/\r?\n/).filter(line => line.trim() !== "");
+          const sections = parsePredictions(predictionsData);
+          const selectedSection = sections.find(s => s.header === selectedCategory);
+          const aestheticItem = selectedSection.items[
+            Math.floor(Math.random() * selectedSection.items.length)
+          ];
+
+          const suggestion = `
+            <div style="background: #f5f5f5; padding: 12px; border-radius: 5px; margin-top: 10px;">
+              <div style="font-size: 0.8em; color: #666; margin-bottom: 8px;">
+                Creative Concept Generator Results:
+              </div>
+              <div style="color: #333; font-size: 1.1em; line-height: 1.4;">
+                Try making a song about <span style="color: #2196F3;">${aestheticItem}</span> 
+                for a youtube video on <span style="color: #4CAF50;">${
+                  (() => {
+                    const matchingTrends = ytTrends.filter(trend => 
+                      trend.toLowerCase().includes(selectedMainCategory.toLowerCase())
+                    );
+                    return matchingTrends.length > 0 
+                      ? matchingTrends[Math.floor(Math.random() * matchingTrends.length)]
+                      : randomYTTrend;
+                  })()
+                }</span> 
+                with a <span style="color: #9C27B0;">${selectedCategory}</span> vibe
+              </div>
+              <div style="font-size: 0.8em; color: #666; margin-top: 8px;">
+                Based on: ${selectedMainCategory} (${selectedTrendType})
+              </div>
+            </div>
+          `;
+          d3.select("#suggestionsOutput").html(`<p>${suggestion}</p>`);
+        });
+      });
+    </script>
+  </body>
+</html> 
