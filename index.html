@@ -79,8 +79,10 @@
       }
       .line {
         fill: none;
-        stroke: steelblue;
         stroke-width: 2px;
+        stroke-dasharray: 2000;  /* Adjust based on path length */
+        stroke-dashoffset: 2000;
+        animation: drawLine 2s ease-out forwards;
       }
 
       .prediction-section {
@@ -211,6 +213,12 @@
       .suggestion-container.show {
         opacity: 1;
         transform: translateY(0);
+      }
+
+      @keyframes drawLine {
+        to {
+          stroke-dashoffset: 0;
+        }
       }
     </style>
   </head>
@@ -378,28 +386,51 @@
           date: parseDate(key),
           value: +trendData[key]
         }));
+
         svg.selectAll("*").remove();
+
         const xScale = d3.scaleTime()
           .domain(d3.extent(timeSeries, d => d.date))
           .range([0, width]);
+
         const yScale = d3.scaleLinear()
           .domain([0, d3.max(timeSeries, d => d.value)])
           .range([height, 0]);
-        const line = d3.line()
-          .x(d => xScale(d.date))
-          .y(d => yScale(d.value));
+
+        // Add X axis
         svg.append("g")
           .attr("transform", `translate(0,${height})`)
           .call(d3.axisBottom(xScale));
+
+        // Add Y axis
         svg.append("g")
           .call(d3.axisLeft(yScale));
+
+        const line = d3.line()
+          .x(d => xScale(d.date))
+          .y(d => yScale(d.value));
+
         const isTopTrend = +trendData.Rank <= 5;
-        svg.append("path")
+
+        // Calculate total length for precise animation
+        const path = svg.append("path")
           .datum(timeSeries)
           .attr("class", "line")
           .attr("d", line)
-          .attr("stroke", isTopTrend ? "orange" : "steelblue")
+          .attr("stroke", "#2196F3")  // Light blue color for all trends
           .attr("stroke-width", isTopTrend ? 4 : 2);
+
+        // Get the total length of the path
+        const totalLength = path.node().getTotalLength();
+
+        // Set up the animation with the actual path length
+        path
+          .style("stroke-dasharray", totalLength)
+          .style("stroke-dashoffset", totalLength)
+          .transition()
+          .duration(2000)
+          .ease(d3.easeLinear)
+          .style("stroke-dashoffset", 0);
       }
 
       // Load initial category
