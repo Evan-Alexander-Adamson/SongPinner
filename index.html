@@ -9,28 +9,45 @@
     <!-- Load D3 from CDN -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-      html, body, .container-fluid {
-        height: 100vh;
+      html, body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
       }
 
-      /* Basic styling for the chart and axes */
-      .axis path,
-      .axis line {
-        fill: none;
-        stroke: #000;
-        shape-rendering: crispEdges;
-      }
-      .line {
-        fill: none;
-        stroke: steelblue;
-        stroke-width: 2px;
-      }
       .container-fluid {
+        min-height: 100%;
         padding: 1rem;
       }
 
       .row {
-        height: 100%;
+        min-height: 100%;
+      }
+
+      @media (max-width: 768px) {
+        .container-fluid {
+          height: auto;
+          overflow-y: visible;
+        }
+        
+        .row {
+          height: auto;
+        }
+        
+        .panel {
+          height: auto;
+          margin-bottom: 1rem;
+        }
+        
+        .col-md-6 {
+          margin-bottom: 1rem;
+        }
+        
+        svg {
+          height: 400px;
+        }
       }
 
       .panel {
@@ -51,10 +68,17 @@
         margin-bottom: 8px;
       }
 
-      /* Full width for the chart SVG */
-      svg {
-        width: 100%;
-        height: calc(100% - 120px); /* Adjust for header and controls */
+      /* Basic styling for the chart and axes */
+      .axis path,
+      .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+      }
+      .line {
+        fill: none;
+        stroke: steelblue;
+        stroke-width: 2px;
       }
 
       .prediction-section {
