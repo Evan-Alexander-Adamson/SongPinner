@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "name": "twitter-api-dashboard",
+  "functions": {
+    "api/*.js": {
+      "runtime": "edge"
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+} 

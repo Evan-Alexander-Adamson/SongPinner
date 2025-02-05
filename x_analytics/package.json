@@ -1,0 +1,18 @@
+{
+  "name": "twitter-api-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Twitter API Dashboard with Vercel Serverless Functions",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step needed'",
+    "deploy": "vercel deploy --prod"
+  },
+  "engines": {
+    "node": ">=18.x"
+  },
+  "devDependencies": {
+    "vercel": "^32.0.0"
+  }
+} 

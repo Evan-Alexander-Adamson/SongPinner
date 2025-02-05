@@ -1,0 +1,378 @@
+```markdown
+# Recent Search
+
+Returns Posts from the last 7 days that match a search query.
+
+## Endpoint
+```
+GET /2/tweets/search/recent
+```
+
+### Try it
+
+### Authorizations
+- **BearerToken**
+  - **Authorization**: `string` (header, required)
+  - Bearer authentication header of the form `Bearer <token>`, where `<token>` is your auth token.
+
+### Query Parameters
+- **query**: `string` (required)
+  - One query/rule/filter for matching Posts. Refer to [rule length](https://t.co/rulelength) to identify the max query length.
+  - Required string length: 1 - 4096
+
+- **start_time**: `string`
+  - Format: `YYYY-MM-DDTHH:mm:ssZ`. The oldest UTC timestamp from which the Posts will be provided. Timestamp is in second granularity and is inclusive (i.e. 12:00:01 includes the first second of the minute).
+
+- **end_time**: `string`
+  - Format: `YYYY-MM-DDTHH:mm:ssZ`. The newest, most recent UTC timestamp to which the Posts will be provided. Timestamp is in second granularity and is exclusive (i.e. 12:00:01 excludes the first second of the minute).
+
+- **since_id**: `string`
+  - Returns results with a Post ID greater than (that is, more recent than) the specified ID.
+
+- **until_id**: `string`
+  - Returns results with a Post ID less than (that is, older than) the specified ID.
+
+- **max_results**: `integer` (default: 10)
+  - The maximum number of search results to be returned by a request.
+  - Required range: 10 < x < 100
+
+- **next_token**: `string`
+  - This parameter is used to get the next 'page' of results. The value used with the parameter is pulled directly from the response provided by the API and should not be modified.
+  - Minimum length: 1
+
+- **pagination_token**: `string`
+  - This parameter is used to get the next 'page' of results. The value used with the parameter is pulled directly from the response provided by the API and should not be modified.
+  - Minimum length: 1
+
+- **sort_order**: `enum<string>`
+  - This order in which to return results.
+  - Available options: `recency`, `relevancy`
+
+- **tweet.fields**: `enum<string>[]`
+  - A comma-separated list of Tweet fields to display.
+  - Available options: `article`, `attachments`, `author_id`, `card_uri`, `community_id`, `context_annotations`, `conversation_id`, `created_at`, `display_text_range`, `edit_controls`, `edit_history_tweet_ids`, `entities`, `geo`, `id`, `in_reply_to_user_id`, `lang`, `media_metadata`, `non_public_metrics`, `note_tweet`, `organic_metrics`, `possibly_sensitive`, `promoted_metrics`, `public_metrics`, `referenced_tweets`, `reply_settings`, `scopes`, `source`, `text`, `withheld`
+
+- **expansions**: `enum<string>[]`
+  - A comma-separated list of fields to expand.
+  - Available options: `article.cover_media`, `article.media_entities`, `attachments.media_keys`, `attachments.media_source_tweet`, `attachments.poll_ids`, `author_id`, `edit_history_tweet_ids`, `entities.mentions.username`, `geo.place_id`, `in_reply_to_user_id`, `entities.note.mentions.username`, `referenced_tweets.id`, `referenced_tweets.id.author_id`
+
+- **media.fields**: `enum<string>[]`
+  - A comma-separated list of Media fields to display.
+  - Available options: `alt_text`, `duration_ms`, `height`, `media_key`, `non_public_metrics`, `organic_metrics`, `preview_image_url`, `promoted_metrics`, `public_metrics`, `type`, `url`, `variants`, `width`
+
+- **poll.fields**: `enum<string>[]`
+  - A comma-separated list of Poll fields to display.
+  - Available options: `duration_minutes`, `end_datetime`, `id`, `options`, `voting_status`
+
+- **user.fields**: `enum<string>[]`
+  - A comma-separated list of User fields to display.
+  - Available options: `affiliation`, `connection_status`, `created_at`, `description`, `entities`, `id`, `is_identity_verified`, `location`, `most_recent_tweet_id`, `name`, `parody`, `pinned_tweet_id`, `profile_banner_url`, `profile_image_url`, `protected`, `public_metrics`, `receives_your_dm`, `subscription`, `subscription_type`, `url`, `username`, `verified`, `verified_followers_count`, `verified_type`, `withheld`
+
+- **place.fields**: `enum<string>[]`
+  - A comma-separated list of Place fields to display.
+  - Available options: `contained_within`, `country`, `country_code`, `full_name`, `geo`, `id`, `name`, `place_type`
+
+### Response
+- **200 - application/json**
+  - **data**: `object[]`
+    - **data.attachments**: `object`
+      - Specifies the type of attachments (if any) present in this Tweet.
+      - **data.attachments.media_keys**: `string[]`
+        - A list of Media Keys for each one of the media attachments (if media are attached).
+      - **data.attachments.media_source_tweet_id**: `string[]`
+        - A list of Posts the media on this Tweet was originally posted in.
+      - **data.attachments.poll_ids**: `string[]`
+        - A list of poll IDs (if polls are attached).
+    - **data.author_id**: `string`
+      - Unique identifier of this User.
+    - **data.community_id**: `string`
+      - The unique identifier of this Community.
+    - **data.context_annotations**: `object[]`
+      - **data.context_annotations.domain**: `object`
+        - Represents the data for the context annotation domain.
+        - **data.context_annotations.domain.id**: `string`
+          - The unique id for a context annotation domain.
+        - **data.context_annotations.domain.description**: `string`
+          - Description of the context annotation domain.
+        - **data.context_annotations.domain.name**: `string`
+          - Name of the context annotation domain.
+      - **data.context_annotations.entity**: `object`
+        - Represents the data for the context annotation entity.
+        - **data.context_annotations.entity.id**: `string`
+          - The unique id for a context annotation entity.
+        - **data.context_annotations.entity.description**: `string`
+          - Description of the context annotation entity.
+        - **data.context_annotations.entity.name**: `string`
+          - Name of the context annotation entity.
+    - **data.conversation_id**: `string`
+      - Unique identifier of this Tweet.
+    - **data.created_at**: `string`
+      - Creation time of the Tweet.
+    - **data.edit_controls**: `object`
+      - **data.edit_controls.editable_until**: `string`
+        - Time when Tweet is no longer editable.
+      - **data.edit_controls.edits_remaining**: `integer`
+        - Number of times this Tweet can be edited.
+      - **data.edit_controls.is_edit_eligible**: `boolean`
+        - Indicates if this Tweet is eligible to be edited.
+    - **data.edit_history_tweet_ids**: `string[]`
+      - A list of Tweet Ids in this Tweet chain.
+    - **data.entities**: `object`
+      - **data.entities.annotations**: `object[]`
+        - **data.entities.annotations.end**: `integer`
+          - Index (zero-based) at which position this entity ends. The index is inclusive.
+        - **data.entities.annotations.start**: `integer`
+          - Index (zero-based) at which position this entity starts. The index is inclusive.
+        - **data.entities.annotations.normalized_text**: `string`
+          - Text used to determine annotation.
+        - **data.entities.annotations.probability**: `number`
+          - Confidence factor for annotation type.
+        - **data.entities.annotations.type**: `string`
+          - Annotation type.
+      - **data.entities.cashtags**: `object[]`
+        - **data.entities.cashtags.end**: `integer`
+          - Index (zero-based) at which position this entity ends. The index is exclusive.
+        - **data.entities.cashtags.start**: `integer`
+          - Index (zero-based) at which position this entity starts. The index is inclusive.
+        - **data.entities.cashtags.tag**: `string`
+          - Required.
+      - **data.entities.hashtags**: `object[]`
+        - **data.entities.hashtags.end**: `integer`
+          - Index (zero-based) at which position this entity ends. The index is exclusive.
+        - **data.entities.hashtags.start**: `integer`
+          - Index (zero-based) at which position this entity starts. The index is inclusive.
+        - **data.entities.hashtags.tag**: `string`
+          - The text of the Hashtag.
+      - **data.entities.mentions**: `object[]`
+        - **data.entities.mentions.end**: `integer`
+          - Index (zero-based) at which position this entity ends. The index is exclusive.
+        - **data.entities.mentions.start**: `integer`
+          - Index (zero-based) at which position this entity starts. The index is inclusive.
+        - **data.entities.mentions.username**: `string`
+          - The X handle (screen name) of this user.
+        - **data.entities.mentions.id**: `string`
+          - Unique identifier of this User.
+      - **data.entities.urls**: `object[]`
+        - **data.entities.urls.end**: `integer`
+          - Index (zero-based) at which position this entity ends. The index is exclusive.
+        - **data.entities.urls.start**: `integer`
+          - Index (zero-based) at which position this entity starts. The index is inclusive.
+        - **data.entities.urls.url**: `string`
+          - A validly formatted URL.
+        - **data.entities.urls.description**: `string`
+          - Description of the URL landing page.
+        - **data.entities.urls.display_url**: `string`
+          - The URL as displayed in the X client.
+        - **data.entities.urls.expanded_url**: `string`
+          - A validly formatted URL.
+      - **data.geo**: `object`
+        - The location tagged on the Tweet, if the user provided one.
+        - **data.geo.coordinates**: `object`
+          - A GeoJson Point geometry object.
+          - **data.geo.coordinates.coordinates**: `number[]`
+            - A GeoJson Position in the format [longitude, latitude].
+          - **data.geo.coordinates.type**: `enum<string>`
+            - Available options: `Point`
+        - **data.geo.place_id**: `string`
+          - The identifier for this place.
+    - **data.id**: `string`
+      - Unique identifier of this Tweet.
+    - **data.in_reply_to_user_id**: `string`
+      - Unique identifier of this User.
+    - **data.lang**: `string`
+      - Language of the Tweet, if detected by X. Returned as a BCP47 language tag.
+    - **data.non_public_metrics**: `object`
+      - Nonpublic engagement metrics for the Tweet at the time of the request.
+      - **data.non_public_metrics.impression_count**: `integer`
+        - Number of times this Tweet has been viewed.
+    - **data.note_tweet**: `object`
+      - The full content of the Tweet, including text beyond 280 characters.
+    - **data.organic_metrics**: `object`
+      - Organic nonpublic engagement metrics for the Tweet at the time of the request.
+    - **data.possibly_sensitive**: `boolean`
+      - Indicates if this Tweet contains URLs marked as sensitive, for example, content suitable for mature audiences.
+    - **data.promoted_metrics**: `object`
+      - Promoted nonpublic engagement metrics for the Tweet at the time of the request.
+      - **data.promoted_metrics.impression_count**: `integer`
+        - Number of times this Tweet has been viewed.
+      - **data.promoted_metrics.like_count**: `integer`
+        - Number of times this Tweet has been liked.
+      - **data.promoted_metrics.reply_count**: `integer`
+        - Number of times this Tweet has been replied to.
+      - **data.promoted_metrics.retweet_count**: `integer`
+        - Number of times this Tweet has been Retweeted.
+    - **data.public_metrics**: `object`
+      - Engagement metrics for the Tweet at the time of the request.
+      - **data.public_metrics.bookmark_count**: `integer` (required)
+        - Number of times this Tweet has been bookmarked.
+      - **data.public_metrics.impression_count**: `integer` (required)
+        - Number of times this Tweet has been viewed.
+      - **data.public_metrics.like_count**: `integer` (required)
+        - Number of times this Tweet has been liked.
+      - **data.public_metrics.reply_count**: `integer` (required)
+        - Number of times this Tweet has been replied to.
+      - **data.public_metrics.retweet_count**: `integer` (required)
+        - Number of times this Tweet has been Retweeted.
+      - **data.public_metrics.quote_count**: `integer`
+        - Number of times this Tweet has been quoted.
+    - **data.referenced_tweets**: `object[]`
+      - A list of Posts this Tweet refers to.
+      - **data.referenced_tweets.id**: `string` (required)
+        - Unique identifier of this Tweet.
+      - **data.referenced_tweets.type**: `enum<string>` (required)
+        - Available options: `retweeted`, `quoted`, `replied_to`
+    - **data.reply_settings**: `enum<string>`
+      - Shows who can reply to a Tweet. Fields returned are `everyone`, `mentioned_users`, `subscribers`, `verified`, and `following`.
+      - Available options: `everyone`, `mentionedUsers`, `following`, `other`, `subscribers`, `verified`
+    - **data.scopes**: `object`
+      - The scopes for this tweet.
+      - **data.scopes.followers**: `boolean`
+        - Indicates if this Tweet is viewable by followers without the Tweet ID.
+    - **data.source**: `string`
+      - This is deprecated.
+    - **data.text**: `string`
+      - The content of the Tweet.
+    - **data.username**: `string`
+      - The X handle (screen name) of this user.
+    - **data.withheld**: `object`
+      - Indicates withholding details for withheld content.
+      - **data.withheld.copyright**: `boolean` (required)
+        - Indicates if the content is being withheld for copyright infringement.
+      - **data.withheld.country_codes**: `string[]` (required)
+        - Provides a list of countries where this content is not available.
+      - **data.withheld.scope**: `enum<string>`
+        - Indicates whether the content being withheld is the tweet or a user.
+        - Available options: `tweet`, `user`
+
+### Errors
+- **errors**: `object[]`
+  - **errors.title**: `string` (required)
+  - **errors.type**: `string` (required)
+  - **errors.detail**: `string`
+  - **errors.status**: `integer`
+
+### Includes
+- **includes**: `object`
+  - **includes.media**: `object[]`
+    - **includes.media.type**: `string` (required)
+    - **includes.media.height**: `integer`
+      - The height of the media in pixels.
+    - **includes.media.media_key**: `string`
+      - The Media Key identifier for this attachment.
+    - **includes.media.width**: `integer`
+      - The width of the media in pixels.
+  - **includes.places**: `object[]`
+    - **includes.places.full_name**: `string` (required)
+    - **includes.places.id**: `string` (required)
+    - **includes.places.contained_within**: `string[]`
+    - **includes.places.country**: `string`
+    - **includes.places.country_code**: `string`
+      - A two-letter ISO 3166-1 alpha-2 country code.
+    - **includes.places.geo**: `object`
+      - **includes.places.geo.bbox**: `number[]` (required)
+      - **includes.places.geo.properties**: `object` (required)
+      - **includes.places.geo.type**: `enum<string>` (required)
+        - Available options: `Feature`
+      - **includes.places.geo.geometry**: `object`
+        - **includes.places.geo.geometry.coordinates**: `number[]` (required)
+          - A GeoJson Position in the format [longitude, latitude].
+        - **includes.places.geo.geometry.type**: `enum<string>` (required)
+          - Available options: `Point`
+    - **includes.places.name**: `string`
+      - The human-readable name of this place.
+    - **includes.places.place_type**: `enum<string>`
+      - Available options: `poi`, `neighborhood`, `city`, `admin`, `country`, `unknown`
+  - **includes.polls**: `object[]`
+    - **includes.polls.id**: `string` (required)
+      - Unique identifier of this poll.
+    - **includes.polls.options**: `object[]` (required)
+      - **includes.polls.options.label**: `string` (required)
+        - The text of a poll choice.
+      - **includes.polls.options.position**: `integer` (required)
+        - Position of this choice in the poll.
+      - **includes.polls.options.votes**: `integer` (required)
+        - Number of users who voted for this choice.
+    - **includes.polls.duration_minutes**: `integer`
+      - Required range: 5 < x < 10080
+    - **includes.polls.end_datetime**: `string`
+    - **includes.polls.voting_status**: `enum<string>`
+      - Available options: `open`, `closed`
+  - **includes.topics**: `object[]`
+    - **includes.topics.id**: `string` (required)
+      - Unique identifier of this Topic.
+    - **includes.topics.name**: `string` (required)
+      - The name of the given topic.
+    - **includes.topics.description**: `string`
+      - The description of the given topic.
+  - **includes.tweets**: `object[]`
+    - **includes.tweets.attachments**: `object`
+      - Specifies the type of attachments (if any) present in this Tweet.
+    - **includes.tweets.author_id**: `string`
+      - Unique identifier of this User.
+    - **includes.tweets.community_id**: `string`
+      - The unique identifier of this Community.
+    - **includes.tweets.context_annotations**: `object[]`
+    - **includes.tweets.conversation_id**: `string`
+      - Unique identifier of this Tweet.
+    - **includes.tweets.created_at**: `string`
+      - Creation time of the Tweet.
+    - **includes.tweets.edit_controls**: `object`
+      - **includes.tweets.edit_controls.editable_until**: `string` (required)
+        - Time when Tweet is no longer editable.
+      - **includes.tweets.edit_controls.edits_remaining**: `integer` (required)
+        - Number of times this Tweet can be edited.
+      - **includes.tweets.edit_controls.is_edit_eligible**: `boolean` (required)
+        - Indicates if this Tweet is eligible to be edited.
+    - **includes.tweets.edit_history_tweet_ids**: `string[]`
+      - A list of Tweet Ids in this Tweet chain.
+    - **includes.tweets.entities**: `object`
+    - **includes.tweets.geo**: `object`
+    - **includes.tweets.id**: `string`
+      - Unique identifier of this Tweet.
+    - **includes.tweets.in_reply_to_user_id**: `string`
+      - Unique identifier of this User.
+    - **includes.tweets.lang**: `string`
+      - Language of the Tweet, if detected by X. Returned as a BCP47 language tag.
+    - **includes.tweets.note_tweet**: `object`
+    - **includes.tweets.organic_metrics**: `object`
+    - **includes.tweets.possibly_sensitive**: `boolean`
+      - Indicates if this Tweet contains URLs marked as sensitive.
+    - **includes.tweets.promoted_metrics**: `object`
+    - **includes.tweets.public_metrics**: `object`
+    - **includes.tweets.referenced_tweets**: `object[]`
+    - **includes.tweets.reply_settings**: `enum<string>`
+    - **includes.tweets.scopes**: `object`
+    - **includes.tweets.source**: `string`
+      - This is deprecated.
+    - **includes.tweets.text**: `string`
+      - The content of the Tweet.
+    - **includes.tweets.username**: `string`
+      - The X handle (screen name) of this user.
+    - **includes.tweets.withheld**: `object`
+  - **includes.users**: `object[]`
+    - **includes.users.id**: `string` (required)
+      - Unique identifier of this User.
+    - **includes.users.name**: `string` (required)
+      - The friendly name of this User.
+    - **includes.users.username**: `string` (required)
+      - The X handle (screen name) of this user.
+    - **includes.users.affiliation**: `object`
+    - **includes.users.connection_status**: `enum<string>[]`
+    - **includes.users.created_at**: `string`
+      - Creation time of this User.
+    - **includes.users.description**: `string`
+      - The text of this User's profile description (bio).
+    - **includes.users.entities**: `object`
+      - A list of metadata found in the User's profile description.
+  - **meta**: `object`
+    - **meta.newest_id**: `string`
+      - The newest id in this response.
+    - **meta.next_token**: `string`
+      - The next token.
+      - Minimum length: 1
+    - **meta.oldest_id**: `string`
+      - The oldest id in this response.
+    - **meta.result_count**: `integer`
+      - The number of results returned in this response.
+```
+
