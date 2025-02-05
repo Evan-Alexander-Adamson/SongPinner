@@ -1,34 +1,28 @@
-export const config = {
-  runtime: 'edge'
-};
-
-export default async function handler(req) {
+// Twitter API Serverless Function
+export default async function handler(req, res) {
   // Enable CORS
-  const headers = {
-    'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET,OPTIONS,POST',
-    'Access-Control-Allow-Headers': 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization',
-    'Content-Type': 'application/json'
-  };
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
+  );
 
   // Handle OPTIONS request for CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 200, headers });
+    res.status(200).end();
+    return;
   }
 
   try {
-    const url = new URL(req.url);
-    const query = url.searchParams.get('query');
+    const { query } = req.query;
 
     if (!query) {
-      return new Response(
-        JSON.stringify({ error: 'Query parameter is required' }), 
-        { status: 400, headers }
-      );
+      return res.status(400).json({ error: 'Query parameter is required' });
     }
 
-    const twitterResponse = await fetch(
+    const response = await fetch(
       `https://api.twitter.com/2/tweets/search/recent?query=${encodeURIComponent(query)}&tweet.fields=created_at`,
       {
         headers: {
@@ -37,28 +31,22 @@ export default async function handler(req) {
       }
     );
 
-    if (!twitterResponse.ok) {
-      const errorText = await twitterResponse.text();
+    if (!response.ok) {
+      const errorText = await response.text();
       console.error('Twitter API error:', errorText);
-      return new Response(
-        JSON.stringify({ 
-          error: `Twitter API error: ${twitterResponse.status}`,
-          details: errorText
-        }), 
-        { status: twitterResponse.status, headers }
-      );
+      return res.status(response.status).json({
+        error: `Twitter API error: ${response.status}`,
+        details: errorText
+      });
     }
 
-    const data = await twitterResponse.json();
-    return new Response(JSON.stringify(data), { status: 200, headers });
+    const data = await response.json();
+    return res.status(200).json(data);
   } catch (error) {
     console.error('Server error:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error',
-        message: error.message 
-      }), 
-      { status: 500, headers }
-    );
+    return res.status(500).json({
+      error: 'Internal server error',
+      message: error.message
+    });
   }
 } 

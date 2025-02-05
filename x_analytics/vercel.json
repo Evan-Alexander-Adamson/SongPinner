@@ -1,11 +1,19 @@
 {
   "version": 2,
-  "name": "twitter-api-dashboard",
-  "functions": {
-    "api/*.js": {
-      "runtime": "edge"
+  "builds": [
+    {
+      "src": "api/*.js",
+      "use": "@vercel/node@2"
+    },
+    {
+      "src": "*.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "assets/**",
+      "use": "@vercel/static"
     }
-  },
+  ],
   "routes": [
     {
       "src": "/api/(.*)",
